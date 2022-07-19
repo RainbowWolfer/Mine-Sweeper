@@ -28,6 +28,8 @@ namespace mineSweeper {
 
 		public List<MyGrid> allGrids;
 
+		public GameObject mousePointer;
+
 		public MyGrid[] mines {
 			get {
 				return allGrids.Where((g) => g.isMine).ToArray();
@@ -61,6 +63,7 @@ namespace mineSweeper {
 		private void Start() {
 			StartCoroutine(TimeCountingAsync());
 		}
+
 		private void Update() {
 			if(isGameStarted) {
 				CameraController.Instance.yOffset += Input.GetAxis("Mouse ScrollWheel") * 3;
@@ -82,6 +85,19 @@ namespace mineSweeper {
 				if(findAll) {
 					StartCoroutine(GameOverAsync(null, true));
 				}
+
+				RaycastHit hit;
+				if(Physics.Raycast(CameraController.Instance.mouseRay, out hit) && hit.collider != null && hit.collider.GetComponent<MyGrid>() != null) {
+					mousePointer.SetActive(true);
+					MyGrid g = hit.collider.GetComponent<MyGrid>();
+					int x = g.location.x;
+					int y = g.location.y;
+					mousePointer.transform.position = new Vector3(x, 0, y);
+				} else {
+					mousePointer.SetActive(false);
+				}
+			} else {
+				mousePointer.SetActive(false);
 			}
 		}
 
@@ -169,7 +185,6 @@ namespace mineSweeper {
 		public void Click(int mouse) {
 			RaycastHit hit;
 			if(Physics.Raycast(CameraController.Instance.mouseRay, out hit)) {
-				//Debug.Log(hit.collider);
 				if(hit.collider != null && hit.collider.GetComponent<MyGrid>() != null) {
 					MyGrid g = hit.collider.GetComponent<MyGrid>();
 					//Debug.Log(g + "is clicked");
@@ -290,7 +305,7 @@ namespace mineSweeper {
 					}
 				}
 			}
-			//find suround mines;
+			//find surround mines;
 			foreach(MyGrid g in allGrids.Where((g) => !g.isMine)) {
 				int amount = 0;
 				foreach(Vector2Int vec in GetAllDirections(g.location)) {
@@ -331,15 +346,31 @@ namespace mineSweeper {
 			}
 			return str;
 		}
-		public static string ReadFile(string fileName, int lineNumebr) {
-			string[] strs = File.ReadAllLines(fileName);
-			if(lineNumebr == 0) {
-				return "";
-			} else if(lineNumebr - 1 > strs.Length) {
-				return "empty";
-			} else {
-				return strs[lineNumebr - 1];
+
+		public static void WriteLastTypeAndTime(string type, string time) {
+			string path = GetFileURL();
+			WriteFile(path, type + "\n" + time);
+		}
+
+		public static void GetLastTypeAndTime(out string type, out string time) {
+			type = "???";
+			time = "???";
+			string path = GetFileURL();
+			string[] content = ReadFile(path);
+			if(content == null || content.Length != 2) {
+				return;
 			}
+			type = content[0];
+			time = content[1];
+		}
+
+		public static string[] ReadFile(string path) {
+			string[] strs = File.ReadAllLines(path);
+			return strs;
+		}
+
+		public static void WriteFile(string path, string content) {
+			File.WriteAllText(path, content);
 		}
 
 		public static string GetFileURL() {

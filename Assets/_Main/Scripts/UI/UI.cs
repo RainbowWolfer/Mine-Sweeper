@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace mineSweeper.ui {
@@ -127,8 +128,21 @@ namespace mineSweeper.ui {
 		public void SetScore(int mines, int allMines, int seconds, string mode) {
 			minesSweptText.text = mines + "/" + allMines;
 			timePassedText.text = Level.TransTimeSecondIntToString(seconds);
-			bestMines.text = "???";
-			bestTime.text = "???";
+			string type = mode + " - " + mines + "/" + allMines;
+			string time = timePassedText.text;
+			try {
+				string lastType;
+				string lastTime;
+				Level.GetLastTypeAndTime(out lastType, out lastTime);
+				bestMines.text = lastType;
+				bestTime.text = lastTime;
+			} catch(Exception) {
+				bestMines.text = "???";
+				bestTime.text = "???";
+			}
+			try {
+				Level.WriteLastTypeAndTime(type, time);
+			} catch(Exception) { }
 			modeText.text = mode;
 		}
 		public void GameOver(bool win) {
