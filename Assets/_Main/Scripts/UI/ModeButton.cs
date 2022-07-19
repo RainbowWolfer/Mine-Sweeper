@@ -44,7 +44,7 @@ namespace mineSweeper.ui {
 			text.text = content;
 
 			bg.fillAmount = fillAmount;
-			outline.effectDistance = Vector2.Lerp(outline.effectDistance, Vector2.one * (isMouseOn ? 3 : 0), Time.deltaTime * 5);
+			outline.effectDistance = Vector2.Lerp(outline.effectDistance, Vector2.one * (isMouseOn ? 5 : 0), Time.deltaTime * 10);
 		}
 	}
 }

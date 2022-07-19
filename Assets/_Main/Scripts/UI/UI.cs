@@ -12,12 +12,15 @@ namespace mineSweeper.ui {
 		public static UI Instance;
 		public Animator anim;
 
+		[Header("Canvas")]
 		public Canvas canvas;
 
+		[Header("HUDs")]
 		public HUD entryHUD;
 		public HUD inGame;
 		public HUD outro;
 
+		[Header("Buttons")]
 		public ModeButton easy;
 		public ModeButton normal;
 		public ModeButton hard;
@@ -26,27 +29,29 @@ namespace mineSweeper.ui {
 		public ModeButton start;
 		public ModeButton backToRestart;
 
+		[Header("Side")]
 		public SideTriangleButton quit;
 		public SideTriangleButton credits;
-		public Text cresitsText;
+		public SideTriangleButton sideBackButton;
 
-		#region entry
+		[Header("About")]
+		public RectTransform aboutPanel;
+		public ModeButton githubButton;
+
+		[Header("Entry")]
 		public CustomPanel customPanel;
-		#endregion
 
-		#region inGame
+		[Header("In Game")]
 		public Text timeText;
 		public Text mineText;
-		#endregion
 
-		#region outro
+		[Header("Outro")]
 		public Text title;
 		public Text modeText;
 		public Text minesSweptText;
 		public Text timePassedText;
 		public Text bestMines;
 		public Text bestTime;
-		#endregion
 
 		private void Awake() {
 			Instance = this;
@@ -69,7 +74,11 @@ namespace mineSweeper.ui {
 				OpenLeftGroup();
 			};
 			start.action = () => {
-				Level.Instance.StartGame(customPanel.row.value, customPanel.column.value, customPanel.mine.value, customPanel.row.value + "x" + customPanel.column.value + " : " + customPanel.mine.value);
+				Level.Instance.StartGame(
+					customPanel.row.value,
+					customPanel.column.value,
+					customPanel.mine.value,
+					customPanel.row.value + "x" + customPanel.column.value + " : " + customPanel.mine.value);
 			};
 			backToRestart.action = () => {
 				outro.Activated = false;
@@ -81,13 +90,32 @@ namespace mineSweeper.ui {
 			quit.action = () => {
 				Application.Quit();
 			};
+			sideBackButton.action = () => {
+				if(!Level.Instance.isGameStarted) {
+					return;
+				}
+				Level.Instance.BackToMenu();
+			};
 			credits.action = () => {
-				cresitsText.gameObject.SetActive(!cresitsText.gameObject.activeSelf);
+				aboutPanel.gameObject.SetActive(!aboutPanel.gameObject.activeSelf);
+			};
+			githubButton.action = () => {
+				Application.OpenURL("https://github.com/RainbowWolfer/Mine-Sweeper");
 			};
 		}
 
 		private void Start() {
 
+		}
+
+		private void Update() {
+			if(Level.Instance.isGameStarted) {
+				quit.gameObject.SetActive(false);
+				sideBackButton.gameObject.SetActive(true);
+			} else {
+				quit.gameObject.SetActive(true);
+				sideBackButton.gameObject.SetActive(false);
+			}
 		}
 
 		public void OpenLeftGroup() {

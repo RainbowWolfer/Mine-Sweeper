@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -26,9 +27,23 @@ namespace mineSweeper {
 		public bool ableToClick = false;
 
 		public List<MyGrid> allGrids;
-		public MyGrid[] mines { get { return allGrids.Where((g) => g.isMine).ToArray(); } }
-		public MyGrid[] flagedMines { get { return mines.Where((g) => g.isMine && g.state == GridState.Flag).ToArray(); } }
-		public MyGrid[] flaged { get { return allGrids.Where((g) => g.state == GridState.Flag).ToArray(); } }
+
+		public MyGrid[] mines {
+			get {
+				return allGrids.Where((g) => g.isMine).ToArray();
+			}
+		}
+		public MyGrid[] flagedMines {
+			get {
+				return mines.Where((g) => g.isMine && g.state == GridState.Flag).ToArray();
+			}
+		}
+		public MyGrid[] flaged {
+			get {
+				return allGrids.Where((g) => g.state == GridState.Flag).ToArray();
+			}
+		}
+
 		public MyGrid FindGrid(int x, int y) {
 			foreach(MyGrid g in allGrids) {
 				if(g.location == new Vector2Int(x, y)) {
@@ -48,7 +63,7 @@ namespace mineSweeper {
 		}
 		private void Update() {
 			if(isGameStarted) {
-				CameraController.Instance.yOffset += Input.GetAxis("Mouse ScrollWheel");
+				CameraController.Instance.yOffset += Input.GetAxis("Mouse ScrollWheel") * 3;
 				UI.Instance.mineText.text = (mines.Length - flaged.Length).ToString();
 				UI.Instance.timeText.text = "Time: " + TransTimeSecondIntToString(seconds);
 				if(ableToClick) {
@@ -69,10 +84,12 @@ namespace mineSweeper {
 				}
 			}
 		}
+
 		private IEnumerator ClickDelayAsync(float seconds) {
 			yield return new WaitForSeconds(seconds);
 			ableToClick = true;
 		}
+
 		private IEnumerator TimeCountingAsync() {
 			while(true) {
 				yield return new WaitForSeconds(1);
@@ -83,7 +100,7 @@ namespace mineSweeper {
 		}
 
 		public void StartGame(int x, int y, int mineAmount, string mode) {
-			UI.Instance.cresitsText.gameObject.SetActive(false);
+			UI.Instance.aboutPanel.gameObject.SetActive(false);
 			isGameStarted = true;
 			currentMode = mode;
 			StartCoroutine(ClickDelayAsync(1));
@@ -99,6 +116,19 @@ namespace mineSweeper {
 				FindGrid(x - 1, y - 1).transform, },
 			x, y);
 		}
+
+		public void BackToMenu() {
+			isGameStarted = false;
+			ableToClick = false;
+
+			UI.Instance.outro.Activated = false;
+			UI.Instance.inGame.Activated = false;
+			UI.Instance.entryHUD.Activated = true;
+
+			ClearGrids();
+			CameraController.Instance.InitializeCameraPosition();
+		}
+
 		public IEnumerator GameOverAsync(MyGrid mine, bool win) {
 			isGameStarted = false;
 			ableToClick = false;
@@ -106,7 +136,8 @@ namespace mineSweeper {
 			allGrids.ForEach((g) => g.state = GridState.Discovered);
 			if(!win) {
 				mine.state = GridState.Discovered;
-				mine.img.color = Color.red;
+				//mine.img.color = Color.red;
+				mine.showRed = true;
 				yield return new WaitForSeconds(1);
 				Explode(mine);
 				yield return new WaitForSeconds(3);
@@ -116,9 +147,10 @@ namespace mineSweeper {
 			UI.Instance.entryHUD.Activated = false;
 			UI.Instance.inGame.Activated = false;
 			UI.Instance.outro.Activated = true;
-			UI.Instance.SetScore(win ? mines.Length :f, mines.Length, seconds, currentMode);
+			UI.Instance.SetScore(win ? mines.Length : f, mines.Length, seconds, currentMode);
 			UI.Instance.GameOver(win);
 		}
+
 		public void Explode(MyGrid grid) {
 			List<Rigidbody> rbs = new List<Rigidbody>();
 			foreach(MyGrid g in allGrids) {
